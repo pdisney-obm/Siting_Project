@@ -34,6 +34,15 @@ function requireAuth(req, res, next) {
   next();
 }
 
+app.get('/api/sites', requireAuth, (req, res) => {
+  if (process.env.USE_SITETRACKER === 'true') {
+    // TODO: replace with fetchSitesFromSitetracker()
+    return res.status(501).json({ error: 'Sitetracker integration not yet implemented' });
+  }
+  const sitesPath = join(__dirname, '../client/src/data/sites.json');
+  res.json(JSON.parse(readFileSync(sitesPath, 'utf-8')));
+});
+
 app.get('/api/decisions', requireAuth, (req, res) => {
   if (!existsSync(DECISIONS_PATH)) return res.json({});
   res.json(JSON.parse(readFileSync(DECISIONS_PATH, 'utf-8')));

@@ -2,12 +2,20 @@ import { useState, useEffect } from 'react';
 import PasswordGate from './components/PasswordGate';
 import Map from './components/Map';
 import ReviewPanel from './components/ReviewPanel';
-import sites from './data/sites.json';
-
 export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem('auth_token'));
+  const [sites, setSites] = useState([]);
   const [decisions, setDecisions] = useState({});
   const [selectedSite, setSelectedSite] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch('/api/sites', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => res.json())
+      .then(data => setSites(data));
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
