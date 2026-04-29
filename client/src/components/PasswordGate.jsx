@@ -43,6 +43,11 @@ export default function PasswordGate({ onAuth }) {
         boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
         width: '340px',
       }}>
+        <img
+          src="/logo-horizontal.png"
+          alt="IKE Smart City"
+          style={{ width: '200px', marginBottom: '28px', display: 'block' }}
+        />
         <h1 style={{ margin: '0 0 6px', fontSize: '20px', fontWeight: 700, color: '#111827' }}>
           ATL Site Reviewer
         </h1>

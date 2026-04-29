@@ -149,6 +149,19 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+      <img
+        src="/logo-horizontal.png"
+        alt="IKE Smart City"
+        style={{
+          position: 'absolute',
+          bottom: '28px',
+          left: '12px',
+          height: '28px',
+          opacity: 0.85,
+          pointerEvents: 'none',
+          zIndex: 10,
+        }}
+      />
       <button
         onClick={handleNext}
         style={{
