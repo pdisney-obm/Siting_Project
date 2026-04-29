@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xxd \"/Users/patrickdisney/Desktop/Siting Project/.env\")",
+      "Bash(npm install *)",
+      "Bash(sudo chmod *)",
+      "Bash(npm cache *)",
+      "Bash(node scripts/geocode.js)",
+      "Bash(node server/index.js)",
+      "Bash(echo \"Server PID: $!\")",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s http://localhost:3001/api/decisions -H \"Authorization: Bearer test\")",
+      "Bash(npx vite *)",
+      "Bash(git add *)",
+      "Bash(git rm *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  }
+}
