@@ -39,6 +39,8 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [-84.388, 33.749],
       zoom: 11,
+      minZoom: 4,
+      maxBounds: [[-125, 24], [-66, 50]], // continental USA
     });
     mapRef.current = map;
 
