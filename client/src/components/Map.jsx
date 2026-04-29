@@ -9,7 +9,7 @@ const COLORS = {
   none:      '#9CA3AF',
 };
 
-function buildGeoJSON(sites, decisions) {
+function buildGeoJSON(sites, decisions, selectedSiteId = null) {
   return {
     type: 'FeatureCollection',
     features: sites
@@ -20,6 +20,7 @@ function buildGeoJSON(sites, decisions) {
         properties: {
           siteId: site.siteId,
           decision: decisions[site.siteId] || 'none',
+          selected: site.siteId === selectedSiteId,
         },
       })),
   };
@@ -47,16 +48,38 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
         data: buildGeoJSON(sites, {}),
       });
 
+      // Halo ring behind selected marker
+      map.addLayer({
+        id: 'sites-halo',
+        type: 'circle',
+        source: 'sites',
+        paint: {
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            10, 13, 14, 18, 18, 24,
+          ],
+          'circle-color': '#1D4ED8',
+          'circle-opacity': [
+            'case', ['boolean', ['get', 'selected'], false], 0.22, 0,
+          ],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#1D4ED8',
+          'circle-stroke-opacity': [
+            'case', ['boolean', ['get', 'selected'], false], 0.5, 0,
+          ],
+        },
+      });
+
+      // Main circles
       map.addLayer({
         id: 'sites-circle',
         type: 'circle',
         source: 'sites',
         paint: {
           'circle-radius': [
-            'interpolate', ['linear'], ['zoom'],
-            10, 5,
-            14, 8,
-            18, 12,
+            'case', ['boolean', ['get', 'selected'], false],
+            ['interpolate', ['linear'], ['zoom'], 10, 7, 14, 11, 18, 15],
+            ['interpolate', ['linear'], ['zoom'], 10, 5, 14,  8, 18, 12],
           ],
           'circle-color': [
             'match', ['get', 'decision'],
@@ -65,9 +88,13 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
             'inventory', COLORS.inventory,
             COLORS.none,
           ],
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff',
-          'circle-opacity': 0.92,
+          'circle-stroke-width': [
+            'case', ['boolean', ['get', 'selected'], false], 3, 2,
+          ],
+          'circle-stroke-color': [
+            'case', ['boolean', ['get', 'selected'], false], '#1D4ED8', '#ffffff',
+          ],
+          'circle-opacity': 1,
         },
       });
 
@@ -87,11 +114,11 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Recolor dots when decisions change
+  // Rebuild GeoJSON when decisions or selected site changes
   useEffect(() => {
     const source = mapRef.current?.getSource('sites');
-    if (source) source.setData(buildGeoJSON(sites, decisions));
-  }, [decisions, sites]);
+    if (source) source.setData(buildGeoJSON(sites, decisions, selectedSite?.siteId ?? null));
+  }, [decisions, sites, selectedSite]);
 
   // Fly to selected site
   useEffect(() => {
