@@ -48,38 +48,33 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
         data: buildGeoJSON(sites, {}),
       });
 
-      // Halo ring behind selected marker
+      // Halo ring — only visible on selected marker
       map.addLayer({
         id: 'sites-halo',
         type: 'circle',
         source: 'sites',
         paint: {
-          'circle-radius': [
-            'interpolate', ['linear'], ['zoom'],
-            10, 13, 14, 18, 18, 24,
-          ],
+          'circle-radius': 16,
           'circle-color': '#1D4ED8',
           'circle-opacity': [
-            'case', ['boolean', ['get', 'selected'], false], 0.22, 0,
+            'case', ['boolean', ['get', 'selected'], false], 0.18, 0,
           ],
           'circle-stroke-width': 2,
           'circle-stroke-color': '#1D4ED8',
           'circle-stroke-opacity': [
-            'case', ['boolean', ['get', 'selected'], false], 0.5, 0,
+            'case', ['boolean', ['get', 'selected'], false], 0.45, 0,
           ],
         },
       });
 
-      // Main circles
+      // Main circles — fixed size, always visible
       map.addLayer({
         id: 'sites-circle',
         type: 'circle',
         source: 'sites',
         paint: {
           'circle-radius': [
-            'case', ['boolean', ['get', 'selected'], false],
-            ['interpolate', ['linear'], ['zoom'], 10, 7, 14, 11, 18, 15],
-            ['interpolate', ['linear'], ['zoom'], 10, 5, 14,  8, 18, 12],
+            'case', ['boolean', ['get', 'selected'], false], 9, 7,
           ],
           'circle-color': [
             'match', ['get', 'decision'],
