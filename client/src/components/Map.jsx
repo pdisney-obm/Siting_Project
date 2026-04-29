@@ -105,7 +105,7 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
 
       map.on('click', 'sites-circle', (e) => {
         const siteId = e.features[0].properties.siteId;
-        const site = sites.find(s => s.siteId === siteId);
+        const site = sitesRef.current.find(s => s.siteId === siteId);
         if (site) onSelectSite(site);
       });
 
