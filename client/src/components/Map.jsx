@@ -44,6 +44,9 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
     });
     mapRef.current = map;
 
+    const resizeObserver = new ResizeObserver(() => map.resize());
+    resizeObserver.observe(containerRef.current);
+
     map.on('load', () => {
       map.addSource('sites', {
         type: 'geojson',
