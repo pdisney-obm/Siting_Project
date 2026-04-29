@@ -109,7 +109,17 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
       .filter(s => s.lat && s.lng && !decisions[s.siteId])
       .sort((a, b) => a.siteId.localeCompare(b.siteId));
     if (!unreviewed.length) return;
-    onSelectSite(unreviewed[0]);
+
+    const currentIdx = unreviewed.findIndex(s => s.siteId === selectedSite?.siteId);
+    const nextIdx = (currentIdx + 1) % unreviewed.length;
+    const next = unreviewed[nextIdx];
+
+    onSelectSite(next);
+    mapRef.current?.flyTo({
+      center: [next.lng, next.lat],
+      zoom: Math.max(mapRef.current.getZoom(), 14),
+      duration: 800,
+    });
   };
 
   return (
