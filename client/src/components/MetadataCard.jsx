@@ -52,7 +52,6 @@ export default function MetadataCard({ site }) {
     ['Site Type',                site.siteType],
     ['Intersection',             site.intersection],
     ['Approved Alternate Corner',site.approvedAlternateCorner],
-    ['Score',                    score],
     ['Primary AADT',             site.primaryAADT?.toLocaleString()],
     ['AADT Rating',              site.aadtRating],
     ['Alcohol Compliance',       acBadge],
@@ -72,6 +71,25 @@ export default function MetadataCard({ site }) {
 
   return (
     <div style={{ padding: '16px' }}>
+      {/* Score banner */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        background: '#F0F9FF',
+        border: '1px solid #BAE6FD',
+        borderRadius: '8px',
+        padding: '10px 16px',
+        marginBottom: '16px',
+      }}>
+        <span style={{ fontSize: '11px', color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
+          Score
+        </span>
+        <span style={{ fontSize: '30px', fontWeight: 700, color: '#0369A1', lineHeight: 1 }}>
+          {score}
+        </span>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px' }}>
         {fields.map(([label, value]) => (
           <Field key={label} label={label} value={value} />

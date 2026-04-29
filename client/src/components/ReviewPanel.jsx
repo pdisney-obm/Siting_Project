@@ -58,7 +58,7 @@ export default function ReviewPanel({ site, decisions, onDecision, onClose, toke
           width: '5px',
           cursor: 'col-resize',
           zIndex: 20,
-          background: handleHovered ? 'rgba(99,102,241,0.35)' : 'transparent',
+          background: handleHovered ? 'rgba(99,102,241,0.45)' : 'rgba(0,0,0,0.12)',
           transition: 'background 0.15s',
         }}
       />
