@@ -29,6 +29,11 @@ function buildGeoJSON(sites, decisions, selectedSiteId = null) {
 export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
+  const sitesRef = useRef(sites);
+  const decisionsRef = useRef(decisions);
+
+  useEffect(() => { sitesRef.current = sites; }, [sites]);
+  useEffect(() => { decisionsRef.current = decisions; }, [decisions]);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -50,7 +55,7 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
     map.on('load', () => {
       map.addSource('sites', {
         type: 'geojson',
-        data: buildGeoJSON(sites, {}),
+        data: buildGeoJSON(sitesRef.current, decisionsRef.current),
       });
 
       // Halo ring — only visible on selected marker
