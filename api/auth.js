@@ -1,5 +1,10 @@
-import { kv } from '@vercel/kv';
-import { randomUUID } from 'crypto';
+import { createHmac } from 'crypto';
+
+export function computeToken() {
+  return createHmac('sha256', process.env.SITE_PASSWORD)
+    .update('atl-site-reviewer')
+    .digest('hex');
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -9,7 +14,5 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const token = randomUUID();
-  await kv.set(`token:${token}`, '1', { ex: 60 * 60 * 24 }); // 24h expiry
-  res.json({ token });
+  res.json({ token: computeToken() });
 }
