@@ -1,15 +1,4 @@
-function computeScore(site) {
-  return (
-    site.pedestrianRating * 2 +
-    site.obstructionRating +
-    site.trafficRating +
-    site.positionRatingCorner +
-    site.ratingLHRH +
-    site.positionRatingDU * 2 +
-    site.acRating +
-    site.aadtRating * 2
-  );
-}
+import { computeScore } from '../utils/score.js';
 
 const AC_BADGE = {
   Green:  { background: '#DCFCE7', color: '#166534' },

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import PasswordGate from './components/PasswordGate';
 import Map from './components/Map';
 import ReviewPanel from './components/ReviewPanel';
+import SiteRadarChart from './components/SiteRadarChart';
 export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem('auth_token'));
   const [sites, setSites] = useState([]);
@@ -53,6 +54,17 @@ export default function App() {
           selectedSite={selectedSite}
           onSelectSite={setSelectedSite}
         />
+        {selectedSite && sites.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '16px',
+            transform: 'translateY(-50%)',
+            zIndex: 10,
+          }}>
+            <SiteRadarChart site={selectedSite} sites={sites} />
+          </div>
+        )}
       </div>
       {selectedSite && (
         <ReviewPanel
