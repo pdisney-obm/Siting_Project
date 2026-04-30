@@ -21,6 +21,16 @@ const RATING_LABELS = {
   obstructionRating:    'Obstruction Rating',
 };
 
+const PERFECT_RATINGS = {
+  aadtRating:           3,
+  acRating:             3,
+  positionRatingDU:     2,
+  ratingLHRH:           2,
+  positionRatingCorner: 2,
+  trafficRating:        2,
+  obstructionRating:    3,
+};
+
 function computeAverages(sites) {
   const fields = Object.keys(RATING_LABELS);
   const averages = {};
@@ -40,6 +50,7 @@ export default function SiteRadarChart({ site, sites }) {
     category: RATING_LABELS[field],
     thisSite: site[field],
     average:  averages[field],
+    perfect:  PERFECT_RATINGS[field],
   }));
 
   const siteScore = computeScore(site);
@@ -69,7 +80,10 @@ export default function SiteRadarChart({ site, sites }) {
           <PolarGrid />
           <PolarAngleAxis dataKey="category" tick={{ fontSize: 10, fill: '#6B7280' }} />
           <Tooltip
-            formatter={(value, name) => [value, name === 'thisSite' ? site.siteId : 'ATL Avg']}
+            formatter={(value, name) => {
+              const labels = { thisSite: site.siteId, average: 'ATL Avg', perfect: 'Perfect' };
+              return [value, labels[name] ?? name];
+            }}
             contentStyle={{ fontSize: '12px', borderRadius: '6px' }}
           />
           <Radar
@@ -87,8 +101,19 @@ export default function SiteRadarChart({ site, sites }) {
             fillOpacity={0.15}
             strokeDasharray="4 4"
           />
+          <Radar
+            name="perfect"
+            dataKey="perfect"
+            stroke="#16A34A"
+            fill="none"
+            fillOpacity={0}
+            strokeDasharray="3 3"
+          />
           <Legend
-            formatter={(value) => value === 'thisSite' ? site.siteId : 'ATL Avg'}
+            formatter={(value) => {
+              const labels = { thisSite: site.siteId, average: 'ATL Avg', perfect: 'Perfect' };
+              return labels[value] ?? value;
+            }}
             iconSize={8}
             wrapperStyle={{ fontSize: '11px', paddingTop: '4px' }}
           />
