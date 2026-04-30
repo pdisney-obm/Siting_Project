@@ -133,7 +133,6 @@ export default function SiteRadarChart({ site, sites }) {
       }}>
         <span>Score: <strong style={{ color: '#2563EB' }}>{siteScore}</strong></span>
         <span>Avg: <strong style={{ color: '#B45309' }}>{avgScore}</strong></span>
-        <span>Perfect: <strong style={{ color: '#16A34A' }}>{PERFECT_SCORE}</strong></span>
       </div>
     </div>
   );
