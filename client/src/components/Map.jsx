@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { CITY_CONFIG } from '../config/cities.js';
 
 const COLORS = {
   yes:       '#22C55E',
@@ -26,7 +27,7 @@ function buildGeoJSON(sites, decisions, selectedSiteId = null) {
   };
 }
 
-export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
+export default function Map({ sites, decisions, selectedSite, onSelectSite, activeCity }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const sitesRef = useRef(sites);
@@ -45,7 +46,7 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
       center: [-84.388, 33.749],
       zoom: 11,
       minZoom: 4,
-      maxBounds: [[-125, 24], [-66, 50]], // continental USA
+      maxBounds: [[-125, 24], [-66, 50]],
     });
     mapRef.current = map;
 
@@ -58,7 +59,6 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
         data: buildGeoJSON(sitesRef.current, decisionsRef.current),
       });
 
-      // Halo ring — only visible on selected marker
       map.addLayer({
         id: 'sites-halo',
         type: 'circle',
@@ -66,26 +66,19 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
         paint: {
           'circle-radius': 16,
           'circle-color': '#1D4ED8',
-          'circle-opacity': [
-            'case', ['boolean', ['get', 'selected'], false], 0.18, 0,
-          ],
+          'circle-opacity': ['case', ['boolean', ['get', 'selected'], false], 0.18, 0],
           'circle-stroke-width': 2,
           'circle-stroke-color': '#1D4ED8',
-          'circle-stroke-opacity': [
-            'case', ['boolean', ['get', 'selected'], false], 0.45, 0,
-          ],
+          'circle-stroke-opacity': ['case', ['boolean', ['get', 'selected'], false], 0.45, 0],
         },
       });
 
-      // Main circles — fixed size, always visible
       map.addLayer({
         id: 'sites-circle',
         type: 'circle',
         source: 'sites',
         paint: {
-          'circle-radius': [
-            'case', ['boolean', ['get', 'selected'], false], 9, 7,
-          ],
+          'circle-radius': ['case', ['boolean', ['get', 'selected'], false], 9, 7],
           'circle-color': [
             'match', ['get', 'decision'],
             'yes',       COLORS.yes,
@@ -93,12 +86,8 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
             'inventory', COLORS.inventory,
             COLORS.none,
           ],
-          'circle-stroke-width': [
-            'case', ['boolean', ['get', 'selected'], false], 3, 2,
-          ],
-          'circle-stroke-color': [
-            'case', ['boolean', ['get', 'selected'], false], '#1D4ED8', '#ffffff',
-          ],
+          'circle-stroke-width': ['case', ['boolean', ['get', 'selected'], false], 3, 2],
+          'circle-stroke-color': ['case', ['boolean', ['get', 'selected'], false], '#1D4ED8', '#ffffff'],
           'circle-opacity': 1,
         },
       });
@@ -109,17 +98,13 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
         if (site) onSelectSite(site);
       });
 
-      map.on('mouseenter', 'sites-circle', () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'sites-circle', () => {
-        map.getCanvas().style.cursor = '';
-      });
+      map.on('mouseenter', 'sites-circle', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'sites-circle', () => { map.getCanvas().style.cursor = ''; });
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Rebuild GeoJSON when decisions or selected site changes
+  // Rebuild GeoJSON when sites, decisions, or selected site changes
   useEffect(() => {
     const source = mapRef.current?.getSource('sites');
     if (source) source.setData(buildGeoJSON(sites, decisions, selectedSite?.siteId ?? null));
@@ -136,9 +121,16 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite }) {
     }
   }, [selectedSite]);
 
+  // Fly to city center when city changes
+  useEffect(() => {
+    if (!mapRef.current || !activeCity) return;
+    const { center, zoom } = CITY_CONFIG[activeCity];
+    mapRef.current.flyTo({ center, zoom, duration: 1500 });
+  }, [activeCity]);
+
   const handleNext = () => {
     const unreviewed = sites
-      .filter(s => s.lat && s.lng && !decisions[s.siteId])
+      .filter(s => s.lat && s.lng && !decisionsRef.current[s.siteId])
       .sort((a, b) => a.siteId.localeCompare(b.siteId));
     if (!unreviewed.length) return;
 

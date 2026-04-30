@@ -8,10 +8,9 @@ import {
   Legend,
 } from 'recharts';
 import { computeScore } from '../utils/score.js';
+import { CITY_CONFIG } from '../config/cities.js';
 
-const PERFECT_SCORE = 28;
-
-const RATING_LABELS = {
+const RATING_LABELS_BASE = {
   aadtRating:           'AADT Rating',
   acRating:             'AC Rating',
   positionRatingDU:     'Position Rating (D/U)',
@@ -19,38 +18,35 @@ const RATING_LABELS = {
   positionRatingCorner: 'Position Rating (Corner)',
   trafficRating:        'Traffic Rating',
   obstructionRating:    'Obstruction Rating',
+  pedestrianRating:     'Pedestrian Rating',
 };
 
-const PERFECT_RATINGS = {
-  aadtRating:           3,
-  acRating:             3,
-  positionRatingDU:     2,
-  ratingLHRH:           2,
-  positionRatingCorner: 2,
-  trafficRating:        2,
-  obstructionRating:    3,
-};
-
-function computeAverages(sites) {
-  const fields = Object.keys(RATING_LABELS);
+function computeAverages(sites, ratingLabels) {
+  const fields = Object.keys(ratingLabels);
   const averages = {};
   fields.forEach(field => {
     const values = sites.map(s => s[field]).filter(v => v != null);
-    averages[field] = parseFloat(
-      (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1)
-    );
+    averages[field] = values.length
+      ? parseFloat((values.reduce((a, b) => a + b, 0) / values.length).toFixed(1))
+      : 0;
   });
   return averages;
 }
 
-export default function SiteRadarChart({ site, sites }) {
-  const averages = computeAverages(sites);
+export default function SiteRadarChart({ site, sites, activeCity }) {
+  const { perfectScore, perfectRatings } = CITY_CONFIG[activeCity] ?? CITY_CONFIG.atlanta;
 
-  const chartData = Object.keys(RATING_LABELS).map(field => ({
-    category: RATING_LABELS[field],
-    thisSite: site[field],
+  const ratingLabels = site.city === 'longbeach'
+    ? { ...RATING_LABELS_BASE, pedestrianRatingNew: 'Pedestrian Rating (New)' }
+    : RATING_LABELS_BASE;
+
+  const averages = computeAverages(sites, ratingLabels);
+
+  const chartData = Object.keys(ratingLabels).map(field => ({
+    category: ratingLabels[field],
+    thisSite: site[field] ?? 0,
     average:  averages[field],
-    perfect:  PERFECT_RATINGS[field],
+    perfect:  perfectRatings[field] ?? 0,
   }));
 
   const siteScore = computeScore(site);
@@ -71,7 +67,7 @@ export default function SiteRadarChart({ site, sites }) {
           {site.siteId} — Ratings
         </div>
         <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>
-          Compared to Atlanta average ({sites.length} sites)
+          Compared to {CITY_CONFIG[activeCity]?.name ?? 'city'} average ({sites.length} sites)
         </div>
       </div>
 
@@ -81,39 +77,16 @@ export default function SiteRadarChart({ site, sites }) {
           <PolarAngleAxis dataKey="category" tick={{ fontSize: 10, fill: '#6B7280' }} />
           <Tooltip
             formatter={(value, name) => {
-              const labels = { thisSite: site.siteId, average: 'ATL Avg', perfect: 'Perfect' };
+              const labels = { thisSite: site.siteId, average: 'Avg', perfect: 'Perfect' };
               return [value, labels[name] ?? name];
             }}
             contentStyle={{ fontSize: '12px', borderRadius: '6px' }}
           />
-          <Radar
-            name="thisSite"
-            dataKey="thisSite"
-            stroke="#2563EB"
-            fill="#2563EB"
-            fillOpacity={0.5}
-          />
-          <Radar
-            name="average"
-            dataKey="average"
-            stroke="#F59E0B"
-            fill="#F59E0B"
-            fillOpacity={0.15}
-            strokeDasharray="4 4"
-          />
-          <Radar
-            name="perfect"
-            dataKey="perfect"
-            stroke="#16A34A"
-            fill="none"
-            fillOpacity={0}
-            strokeDasharray="3 3"
-          />
+          <Radar name="thisSite" dataKey="thisSite" stroke="#2563EB" fill="#2563EB" fillOpacity={0.5} />
+          <Radar name="average"  dataKey="average"  stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.15} strokeDasharray="4 4" />
+          <Radar name="perfect"  dataKey="perfect"  stroke="#16A34A" fill="none"    fillOpacity={0}    strokeDasharray="3 3" />
           <Legend
-            formatter={(value) => {
-              const labels = { thisSite: site.siteId, average: 'ATL Avg', perfect: 'Perfect' };
-              return labels[value] ?? value;
-            }}
+            formatter={value => ({ thisSite: site.siteId, average: 'Avg', perfect: 'Perfect' }[value] ?? value)}
             iconSize={8}
             wrapperStyle={{ fontSize: '11px', paddingTop: '4px' }}
           />
@@ -133,6 +106,7 @@ export default function SiteRadarChart({ site, sites }) {
       }}>
         <span>Score: <strong style={{ color: '#2563EB' }}>{siteScore}</strong></span>
         <span>Avg: <strong style={{ color: '#B45309' }}>{avgScore}</strong></span>
+        <span>Perfect: <strong style={{ color: '#16A34A' }}>{perfectScore}</strong></span>
       </div>
     </div>
   );

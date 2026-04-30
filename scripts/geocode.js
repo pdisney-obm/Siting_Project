@@ -10,7 +10,7 @@ const API_KEY = process.env.GOOGLE_MAPS_KEY;
 const sites = JSON.parse(fs.readFileSync(SITES_PATH, 'utf-8'));
 
 function geocode(address) {
-  const query = encodeURIComponent(`${address}, Atlanta, GA`);
+  const query = encodeURIComponent(address);
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${API_KEY}`;
   return new Promise((resolve, reject) => {
     https.get(url, (res) => {
@@ -35,8 +35,10 @@ async function run() {
       console.log(`  ✓ ${site.siteId} already has coordinates, skipping`);
       continue;
     }
-    process.stdout.write(`  Geocoding ${site.siteId}: ${site.intersection}... `);
-    const loc = await geocode(site.intersection);
+    const suffix = site.city === 'longbeach' ? ', Long Beach, CA' : ', Atlanta, GA';
+    const query = site.intersection + suffix;
+    process.stdout.write(`  Geocoding ${site.siteId}: ${query}... `);
+    const loc = await geocode(query);
     if (loc) {
       site.lat = loc.lat;
       site.lng = loc.lng;
