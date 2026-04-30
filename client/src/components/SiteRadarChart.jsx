@@ -10,14 +10,13 @@ import {
 import { computeScore } from '../utils/score.js';
 
 const RATING_LABELS = {
-  aadtRating:           'AADT',
-  acRating:             'Alcohol',
-  positionRatingDU:     'Position D/U',
-  ratingLHRH:           'LH/RH',
-  positionRatingCorner: 'Corner',
-  trafficRating:        'Traffic',
-  obstructionRating:    'Obstructions',
-  pedestrianRating:     'Pedestrian',
+  aadtRating:           'AADT Rating',
+  acRating:             'AC Rating',
+  positionRatingDU:     'Position Rating (D/U)',
+  ratingLHRH:           'LH/RH Rating',
+  positionRatingCorner: 'Position Rating (Corner)',
+  trafficRating:        'Traffic Rating',
+  obstructionRating:    'Obstruction Rating',
 };
 
 function computeAverages(sites) {
