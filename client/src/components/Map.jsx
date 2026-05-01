@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { CITY_CONFIG } from '../config/cities.js';
@@ -8,6 +8,12 @@ const COLORS = {
   no:        '#EF4444',
   inventory: '#EAB308',
   none:      '#9CA3AF',
+};
+
+const MAP_STYLES = {
+  streets:   { label: 'Streets',   url: 'mapbox://styles/mapbox/streets-v12' },
+  satellite: { label: 'Satellite', url: 'mapbox://styles/mapbox/satellite-streets-v12' },
+  traffic:   { label: 'Traffic',   url: 'mapbox://styles/mapbox/navigation-day-v1' },
 };
 
 function buildGeoJSON(sites, decisions, selectedSiteId = null) {
@@ -27,11 +33,78 @@ function buildGeoJSON(sites, decisions, selectedSiteId = null) {
   };
 }
 
+function addSiteLayers(map, sitesRef, decisionsRef, isTraffic) {
+  // Traffic overlay goes beneath site markers
+  if (isTraffic) {
+    map.addSource('mapbox-traffic', {
+      type: 'vector',
+      url: 'mapbox://mapbox.mapbox-traffic-v1',
+    });
+    map.addLayer({
+      id: 'traffic-layer',
+      type: 'line',
+      source: 'mapbox-traffic',
+      'source-layer': 'traffic',
+      paint: {
+        'line-width': 2.5,
+        'line-color': [
+          'match', ['get', 'congestion'],
+          'low',      '#4CAF50',
+          'moderate', '#FFC107',
+          'heavy',    '#FF9800',
+          'severe',   '#F44336',
+          '#9E9E9E',
+        ],
+      },
+    });
+  }
+
+  map.addSource('sites', {
+    type: 'geojson',
+    data: buildGeoJSON(sitesRef.current, decisionsRef.current),
+  });
+
+  map.addLayer({
+    id: 'sites-halo',
+    type: 'circle',
+    source: 'sites',
+    paint: {
+      'circle-radius': 16,
+      'circle-color': '#1D4ED8',
+      'circle-opacity': ['case', ['boolean', ['get', 'selected'], false], 0.18, 0],
+      'circle-stroke-width': 2,
+      'circle-stroke-color': '#1D4ED8',
+      'circle-stroke-opacity': ['case', ['boolean', ['get', 'selected'], false], 0.45, 0],
+    },
+  });
+
+  map.addLayer({
+    id: 'sites-circle',
+    type: 'circle',
+    source: 'sites',
+    paint: {
+      'circle-radius': ['case', ['boolean', ['get', 'selected'], false], 9, 7],
+      'circle-color': [
+        'match', ['get', 'decision'],
+        'yes',       COLORS.yes,
+        'no',        COLORS.no,
+        'inventory', COLORS.inventory,
+        COLORS.none,
+      ],
+      'circle-stroke-width': ['case', ['boolean', ['get', 'selected'], false], 3, 2],
+      'circle-stroke-color': ['case', ['boolean', ['get', 'selected'], false], '#1D4ED8', '#ffffff'],
+      'circle-opacity': 1,
+    },
+  });
+}
+
 export default function Map({ sites, decisions, selectedSite, onSelectSite, activeCity }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const sitesRef = useRef(sites);
   const decisionsRef = useRef(decisions);
+  const [mapStyle, setMapStyle] = useState('streets');
+  const mapStyleRef = useRef('streets');
 
   useEffect(() => { sitesRef.current = sites; }, [sites]);
   useEffect(() => { decisionsRef.current = decisions; }, [decisions]);
@@ -42,7 +115,7 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite, acti
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: MAP_STYLES.streets.url,
       center: [-84.388, 33.749],
       zoom: 11,
       minZoom: 4,
@@ -53,53 +126,18 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite, acti
     const resizeObserver = new ResizeObserver(() => map.resize());
     resizeObserver.observe(containerRef.current);
 
-    map.on('load', () => {
-      map.addSource('sites', {
-        type: 'geojson',
-        data: buildGeoJSON(sitesRef.current, decisionsRef.current),
-      });
+    // Click/cursor handlers — added once, persist through setStyle() calls
+    map.on('click', 'sites-circle', (e) => {
+      const siteId = e.features[0].properties.siteId;
+      const site = sitesRef.current.find(s => s.siteId === siteId);
+      if (site) onSelectSite(site);
+    });
+    map.on('mouseenter', 'sites-circle', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'sites-circle', () => { map.getCanvas().style.cursor = ''; });
 
-      map.addLayer({
-        id: 'sites-halo',
-        type: 'circle',
-        source: 'sites',
-        paint: {
-          'circle-radius': 16,
-          'circle-color': '#1D4ED8',
-          'circle-opacity': ['case', ['boolean', ['get', 'selected'], false], 0.18, 0],
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#1D4ED8',
-          'circle-stroke-opacity': ['case', ['boolean', ['get', 'selected'], false], 0.45, 0],
-        },
-      });
-
-      map.addLayer({
-        id: 'sites-circle',
-        type: 'circle',
-        source: 'sites',
-        paint: {
-          'circle-radius': ['case', ['boolean', ['get', 'selected'], false], 9, 7],
-          'circle-color': [
-            'match', ['get', 'decision'],
-            'yes',       COLORS.yes,
-            'no',        COLORS.no,
-            'inventory', COLORS.inventory,
-            COLORS.none,
-          ],
-          'circle-stroke-width': ['case', ['boolean', ['get', 'selected'], false], 3, 2],
-          'circle-stroke-color': ['case', ['boolean', ['get', 'selected'], false], '#1D4ED8', '#ffffff'],
-          'circle-opacity': 1,
-        },
-      });
-
-      map.on('click', 'sites-circle', (e) => {
-        const siteId = e.features[0].properties.siteId;
-        const site = sitesRef.current.find(s => s.siteId === siteId);
-        if (site) onSelectSite(site);
-      });
-
-      map.on('mouseenter', 'sites-circle', () => { map.getCanvas().style.cursor = 'pointer'; });
-      map.on('mouseleave', 'sites-circle', () => { map.getCanvas().style.cursor = ''; });
+    // Re-add all sources and layers after every style load (initial load + setStyle)
+    map.on('style.load', () => {
+      addSiteLayers(map, sitesRef, decisionsRef, mapStyleRef.current === 'traffic');
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -128,6 +166,13 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite, acti
     mapRef.current.flyTo({ center, zoom, duration: 1500 });
   }, [activeCity]);
 
+  const handleStyleChange = (style) => {
+    if (style === mapStyleRef.current) return;
+    setMapStyle(style);
+    mapStyleRef.current = style;
+    mapRef.current?.setStyle(MAP_STYLES[style].url);
+  };
+
   const handleNext = () => {
     const unreviewed = sites
       .filter(s => s.lat && s.lng && !decisionsRef.current[s.siteId])
@@ -149,6 +194,8 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite, acti
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+
+      {/* Logo */}
       <img
         src="/logo-horizontal.png"
         alt="IKE Smart City"
@@ -162,6 +209,44 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite, acti
           zIndex: 10,
         }}
       />
+
+      {/* Style toggle — sits above the logo */}
+      <div style={{
+        position: 'absolute',
+        bottom: '64px',
+        left: '12px',
+        zIndex: 10,
+        display: 'flex',
+        background: '#ffffff',
+        borderRadius: '6px',
+        boxShadow: '0 1px 6px rgba(0,0,0,0.22)',
+        overflow: 'hidden',
+      }}>
+        {Object.entries(MAP_STYLES).map(([key, { label }]) => {
+          const active = mapStyle === key;
+          return (
+            <button
+              key={key}
+              onClick={() => handleStyleChange(key)}
+              style={{
+                padding: '6px 10px',
+                fontSize: '11px',
+                fontWeight: 600,
+                border: 'none',
+                borderRight: key !== 'traffic' ? '1px solid #E5E7EB' : 'none',
+                background: active ? '#1D4ED8' : 'transparent',
+                color: active ? '#ffffff' : '#374151',
+                cursor: 'pointer',
+                letterSpacing: '0.02em',
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Next Unreviewed button */}
       <button
         onClick={handleNext}
         style={{
