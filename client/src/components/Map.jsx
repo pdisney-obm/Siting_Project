@@ -7,7 +7,12 @@ const COLORS = {
   yes:       '#22C55E',
   no:        '#EF4444',
   inventory: '#EAB308',
-  none:      '#9CA3AF',
+};
+
+const NONE_COLOR = {
+  streets:   '#9CA3AF',
+  satellite: '#FFFFFF',
+  traffic:   '#3B82F6',
 };
 
 const MAP_STYLES = {
@@ -33,7 +38,7 @@ function buildGeoJSON(sites, decisions, selectedSiteId = null) {
   };
 }
 
-function addSiteLayers(map, sitesRef, decisionsRef, isTraffic) {
+function addSiteLayers(map, sitesRef, decisionsRef, isTraffic, noneColor) {
   // Traffic overlay goes beneath site markers
   if (isTraffic) {
     map.addSource('mapbox-traffic', {
@@ -89,7 +94,7 @@ function addSiteLayers(map, sitesRef, decisionsRef, isTraffic) {
         'yes',       COLORS.yes,
         'no',        COLORS.no,
         'inventory', COLORS.inventory,
-        COLORS.none,
+        noneColor,
       ],
       'circle-stroke-width': ['case', ['boolean', ['get', 'selected'], false], 3, 2],
       'circle-stroke-color': ['case', ['boolean', ['get', 'selected'], false], '#1D4ED8', '#ffffff'],
@@ -137,7 +142,8 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite, acti
 
     // Re-add all sources and layers after every style load (initial load + setStyle)
     map.on('style.load', () => {
-      addSiteLayers(map, sitesRef, decisionsRef, mapStyleRef.current === 'traffic');
+      const style = mapStyleRef.current;
+      addSiteLayers(map, sitesRef, decisionsRef, style === 'traffic', NONE_COLOR[style]);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
