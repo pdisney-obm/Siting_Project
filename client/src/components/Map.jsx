@@ -44,10 +44,10 @@ function buildGeoJSON(sites, decisions, selectedSiteId = null) {
   };
 }
 
-function addSiteLayers(map, sitesRef, decisionsRef, noneColor, markerStroke) {
+function addSiteLayers(map, sitesRef, decisionsRef, selectedSiteRef, noneColor, markerStroke) {
   map.addSource('sites', {
     type: 'geojson',
-    data: buildGeoJSON(sitesRef.current, decisionsRef.current),
+    data: buildGeoJSON(sitesRef.current, decisionsRef.current, selectedSiteRef.current?.siteId ?? null),
   });
 
   map.addLayer({
@@ -89,11 +89,13 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite, acti
   const mapRef = useRef(null);
   const sitesRef = useRef(sites);
   const decisionsRef = useRef(decisions);
+  const selectedSiteRef = useRef(selectedSite);
   const [mapStyle, setMapStyle] = useState('streets');
   const mapStyleRef = useRef('streets');
 
   useEffect(() => { sitesRef.current = sites; }, [sites]);
   useEffect(() => { decisionsRef.current = decisions; }, [decisions]);
+  useEffect(() => { selectedSiteRef.current = selectedSite; }, [selectedSite]);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -124,7 +126,7 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite, acti
     // Re-add all sources and layers after every style load (initial load + setStyle)
     map.on('style.load', () => {
       const style = mapStyleRef.current;
-      addSiteLayers(map, sitesRef, decisionsRef, NONE_COLOR[style], MARKER_STROKE[style]);
+      addSiteLayers(map, sitesRef, decisionsRef, selectedSiteRef, NONE_COLOR[style], MARKER_STROKE[style]);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
