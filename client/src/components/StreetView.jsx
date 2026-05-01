@@ -32,6 +32,10 @@ export default function StreetView({ site }) {
           motionTracking: false,
           motionTrackingControl: false,
         });
+        new google.maps.Marker({
+          position: { lat: site.lat, lng: site.lng },
+          map: panoramaRef.current,
+        });
       } else {
         panoramaRef.current.setPosition({ lat: site.lat, lng: site.lng });
       }
