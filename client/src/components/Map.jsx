@@ -46,32 +46,7 @@ function buildGeoJSON(sites, decisions, selectedSiteId = null) {
   };
 }
 
-function addSiteLayers(map, sitesRef, decisionsRef, isTraffic, noneColor, markerStroke) {
-  // Traffic overlay goes beneath site markers
-  if (isTraffic) {
-    map.addSource('mapbox-traffic', {
-      type: 'vector',
-      url: 'mapbox://mapbox.mapbox-traffic-v1',
-    });
-    map.addLayer({
-      id: 'traffic-layer',
-      type: 'line',
-      source: 'mapbox-traffic',
-      'source-layer': 'traffic',
-      paint: {
-        'line-width': 2.5,
-        'line-color': [
-          'match', ['get', 'congestion'],
-          'low',      '#4CAF50',
-          'moderate', '#FFC107',
-          'heavy',    '#FF9800',
-          'severe',   '#F44336',
-          '#9E9E9E',
-        ],
-      },
-    });
-  }
-
+function addSiteLayers(map, sitesRef, decisionsRef, noneColor, markerStroke) {
   map.addSource('sites', {
     type: 'geojson',
     data: buildGeoJSON(sitesRef.current, decisionsRef.current),
@@ -151,7 +126,7 @@ export default function Map({ sites, decisions, selectedSite, onSelectSite, acti
     // Re-add all sources and layers after every style load (initial load + setStyle)
     map.on('style.load', () => {
       const style = mapStyleRef.current;
-      addSiteLayers(map, sitesRef, decisionsRef, style === 'traffic', NONE_COLOR[style], MARKER_STROKE[style]);
+      addSiteLayers(map, sitesRef, decisionsRef, NONE_COLOR[style], MARKER_STROKE[style]);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
