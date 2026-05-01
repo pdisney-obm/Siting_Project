@@ -17,11 +17,13 @@ function getGoogle() {
 export default function StreetView({ site }) {
   const containerRef = useRef(null);
   const panoramaRef = useRef(null);
+  const markerRef = useRef(null);
 
   useEffect(() => {
     if (!site.lat || !site.lng) return;
     getGoogle().then(google => {
       if (!containerRef.current) return;
+
       if (!panoramaRef.current) {
         panoramaRef.current = new google.maps.StreetViewPanorama(containerRef.current, {
           position: { lat: site.lat, lng: site.lng },
@@ -32,15 +34,22 @@ export default function StreetView({ site }) {
           motionTracking: false,
           motionTrackingControl: false,
         });
-        new google.maps.Marker({
-          position: { lat: site.lat, lng: site.lng },
-          map: panoramaRef.current,
-        });
       } else {
         panoramaRef.current.setPosition({ lat: site.lat, lng: site.lng });
       }
+
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+      }
+
+      const marker = new google.maps.Marker({
+        position: { lat: site.lat, lng: site.lng },
+        map: panoramaRef.current,
+      });
+      console.log('StreetView marker created:', marker, '| map:', marker.getMap());
+      markerRef.current = marker;
     });
-  }, [site.lat, site.lng]);
+  }, [site]);
 
   if (!site.lat || !site.lng) {
     return (
