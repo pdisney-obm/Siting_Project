@@ -15,11 +15,9 @@ const NONE_COLOR = {
   traffic:   '#FFFFFF',
 };
 
-// Dark stroke on traffic so markers pop against the light navigation-day background;
-// white stroke on streets/satellite where the map is darker or more colorful
 const MARKER_STROKE = {
   streets:   '#ffffff',
-  satellite: '#ffffff',
+  satellite: '#1F2937',
   traffic:   '#1F2937',
 };
 
