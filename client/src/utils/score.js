@@ -4,7 +4,6 @@ export function computeScore(site) {
     site.obstructionRating +
     site.trafficRating +
     site.positionRatingCorner +
-    site.ratingLHRH +
     site.positionRatingDU * 2 +
     site.acRating +
     site.aadtRating * 2 +

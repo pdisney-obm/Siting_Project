@@ -14,7 +14,6 @@ const RATING_LABELS_BASE = {
   aadtRating:           'AADT Rating',
   acRating:             'AC Rating',
   positionRatingDU:     'Position Rating (D/U)',
-  ratingLHRH:           'LH/RH Rating',
   positionRatingCorner: 'Position Rating (Corner)',
   trafficRating:        'Traffic Rating',
   obstructionRating:    'Obstruction Rating',
